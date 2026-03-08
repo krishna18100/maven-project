@@ -40,25 +40,22 @@ pipeline {
         }
 
         stage('Deploy to Application Server') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'master'
-                }
-            }
-            steps {
-                sshagent(['app-server-ssh']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ${APP_SERVER_USER}@${APP_SERVER_IP} "mkdir -p ${APP_SERVER_DIR}"
-                        scp -o StrictHostKeyChecking=no target/*.jar ${APP_SERVER_USER}@${APP_SERVER_IP}:${APP_SERVER_DIR}/app.jar
-                        ssh -o StrictHostKeyChecking=no ${APP_SERVER_USER}@${APP_SERVER_IP} "
-                            pkill -f app.jar || true
-                            nohup java -jar ${APP_SERVER_DIR}/app.jar > ${APP_SERVER_DIR}/app.log 2>&1 &
-                        "
-                    '''
-                }
-            }
+    when {
+        anyOf {
+            branch 'main'
+            branch 'master'
         }
+    }
+    steps {
+        sshagent(['app-server-ssh']) {
+            sh '''
+                ssh -o StrictHostKeyChecking=no ${APP_SERVER_USER}@${APP_SERVER_IP} "mkdir -p ${APP_SERVER_DIR}"
+                scp -o StrictHostKeyChecking=no target/*.jar ${APP_SERVER_USER}@${APP_SERVER_IP}:${APP_SERVER_DIR}/app.jar
+                ssh -o StrictHostKeyChecking=no ${APP_SERVER_USER}@${APP_SERVER_IP} "pkill -f app.jar || true; nohup java -jar ${APP_SERVER_DIR}/app.jar > ${APP_SERVER_DIR}/app.log 2>&1 &"
+            '''
+        }
+    }
+}
     }
 
     post {
